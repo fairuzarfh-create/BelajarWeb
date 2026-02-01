@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Gizi Harian Standar Indonesia</title>
+    <style>
+        :root {
+            --primary: #2E7D32; /* Hijau Kemenkes/Sehat */
+            --secondary: #81C784;
+            --bg: #f4f7f6;
+            --text: #333;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 { color: var(--primary); }
+        p.subtitle { color: #666; }
+
+        .card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            border-bottom: 2px solid var(--secondary);
+            padding-bottom: 10px;
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group.full-width { grid-column: span 2; }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box; /* Agar padding tidak merusak width */
+        }
+
+        .btn-calc {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .btn-calc:hover { background-color: #1B5E20; }
+
+        /* Hasil Section */
+        #resultSection { display: none; }
+
+        .result-box {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 5px solid var(--primary);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .comparison-table th, .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .comparison-table th { background-color: var(--secondary); color: white; }
+
+        .status-deficit { color: #d32f2f; font-weight: bold; }
+        .status-surplus { color: #f57c00; font-weight: bold; }
+        .status-ideal { color: var(--primary); font-weight: bold; }
+
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full-width { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>GiziKu Indonesia 🇮🇩</h1>
+        <p class="subtitle">Kalkulator Kebutuhan & Evaluasi Gizi Harian (Standar Piring Makanku)</p>
+    </header>
+
+    <div class="card">
+        <h2>1. Data Diri</h2>
+        <div class="form-grid">
+            <div class="form-group full-width">
+                <label>Nama Lengkap</label>
+                <input type="text" id="nama" placeholder="Masukkan nama anda">
+            </div>
+            <div class="form-group">
+                <label>Jenis Kelamin</label>
+                <select id="gender">
+                    <option value="male">Laki-laki</option>
+                    <option value="female">Perempuan</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Usia (Tahun)</label>
+                <input type="number" id="usia" placeholder="Contoh: 25">
+            </div>
+            <div class="form-group">
+                <label>Berat Badan (kg)</label>
+                <input type="number" id="bb" placeholder="Contoh: 60">
+            </div>
+            <div class="form-group">
+                <label>Tinggi Badan (cm)</label>
+                <input type="number" id="tb" placeholder="Contoh: 170">
+            </div>
+            <div class="form-group full-width">
+                <label>Tingkat Aktivitas</label>
+                <select id="activity">
+                    <option value="1.2">Sangat Ringan (Rebahan/Duduk saja)</option>
+                    <option value="1.375">Ringan (Olahraga 1-3 hari/minggu)</option>
+                    <option value="1.55">Sedang (Olahraga 3-5 hari/minggu)</option>
+                    <option value="1.725">Berat (Olahraga 6-7 hari/minggu)</option>
+                    <option value="1.9">Ekstra Berat (Pekerja fisik/Atlet)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>2. Asupan Makanan Hari Ini (Per Porsi)</h2>
+        <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
+            Masukkan jumlah porsi yang Anda makan seharian. <br>
+            <em>Contoh: 1 porsi nasi = 1 centong (100g), 1 porsi ayam = 1 potong sedang.</em>
+        </p>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Karbohidrat Pokok (Nasi/Roti/Mie)</label>
+                <input type="number" id="inputKarbo" value="0" min="0">
+                <small>Porsi (±100g nasi)</small>
+            </div>
+            <div class="form-group">
+                <label>Sayur & Buah</label>
+                <input type="number" id="inputSayurBuah" value="0" min="0">
+                <small>Porsi (1 mangkuk/buah)</small>
+            </div>
+            <div class="form-group">
+                <label>Protein Nabati (Tahu/Tempe/Kacang)</label>
+                <input type="number" id="inputNabati" value="0" min="0">
+                <small>Potong sedang</small>
+            </div>
+            <div class="form-group">
+                <label>Protein Hewani (Ayam/Ikan/Daging/Telur)</label>
+                <input type="number" id="inputHewani" value="0" min="0">
+                <small>Potong sedang / butir</small>
+            </div>
+            <div class="form-group">
+                <label>Lemak/Minyak/Santan</label>
+                <input type="number" id="inputLemak" value="0" min="0">
+                <small>Sendok Makan (sdm)</small>
+            </div>
+            <div class="form-group">
+                <label>Gula (Minuman Manis/Kue)</label>
+                <input type="number" id="inputGula" value="0" min="0">
+                <small>Sendok Makan (sdm)</small>
+            </div>
+        </div>
+        <button class="btn-calc" onclick="hitungGizi()">HITUNG KEBUTUHAN & EVALUASI</button>
+    </div>
+
+    <div id="resultSection" class="card">
+        <h2>3. Laporan Gizi: <span id="outNama"></span></h2>
+        
+        <div class="result-box">
+            <h3>Kebutuhan Tubuh Anda (Target)</h3>
+            <p>Berdasarkan usia, berat, dan aktivitas, tubuh Anda membutuhkan:</p>
+            <strong style="font-size: 1.5rem;" id="outTargetKalori">0</strong> kkal/hari
+        </div>
+
+        <div class="result-box" style="background-color: #fff3e0; border-color: #f57c00;">
+            <h3>Asupan Makan Anda (Aktual)</h3>
+            <p>Total kalori dari makanan yang Anda input:</p>
+            <strong style="font-size: 1.5rem;" id="outAsupanKalori">0</strong> kkal/hari
+        </div>
+
+        <h3>Analisis Detail</h3>
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Komponen</th>
+                    <th>Target (Ideal)</th>
+                    <th>Asupan Anda</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                </tbody>
+        </table>
+
+        <div style="margin-top: 20px;">
+            <h3>Kesimpulan:</h3>
+            <p id="kesimpulanText" style="line-height: 1.6;"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // DATA REFERENSI NILAI GIZI (Rata-rata Standar Indonesia - TKPI)
+    // Satuan dalam gram/kkal per 1 PORSI
+    const FOOD_VALUES = {
+        karbo: { kkal: 175, karbo: 40, prot: 4, lemak: 0 },   // Nasi 100g
+        sayurBuah: { kkal: 50, karbo: 10, prot: 1, lemak: 0 }, // Campuran rata-rata
+        nabati: { kkal: 75, karbo: 7, prot: 5, lemak: 3 },    // Tempe 2 potong
+        hewani: { kkal: 95, karbo: 0, prot: 10, lemak: 6 },   // Ayam/Ikan rata-rata (medium fat)
+        lemak: { kkal: 50, karbo: 0, prot: 0, lemak: 5 },     // Minyak 1 sdt / Santan encer
+        gula: { kkal: 50, karbo: 12, prot: 0, lemak: 0 }      // Gula 1 sdm
+    };
+
+    function hitungGizi() {
+        // 1. Ambil Input Data Diri
+        const nama = document.getElementById('nama').value;
+        const gender = document.getElementById('gender').value;
+        const usia = parseFloat(document.getElementById('usia').value);
+        const bb = parseFloat(document.getElementById('bb').value);
+        const tb = parseFloat(document.getElementById('tb').value);
+        const activity = parseFloat(document.getElementById('activity').value);
+
+        // Validasi
+        if (!nama || !usia || !bb || !tb) {
+            alert("Mohon lengkapi data diri anda!");
+            return;
+        }
+
+        // 2. Hitung BMR (Mifflin-St Jeor)
+        let bmr = 0;
+        if (gender === 'male') {
+            bmr = (10 * bb) + (6.25 * tb) - (5 * usia) + 5;
+        } else {
+            bmr = (10 * bb) + (6.25 * tb) - (5 * usia) - 161;
+        }
+
+        // 3. Hitung TEE (Total Energy Expenditure) / Kebutuhan Kalori Harian
+        const targetKalori = Math.round(bmr * activity);
+
+        // 4. Hitung Target Makronutrisi (Standar Gizi Seimbang Indo: 60% Karbo, 15% Protein, 25% Lemak)
+        const targetKarboGram = Math.round((targetKalori * 0.60) / 4);
+        const targetProtGram = Math.round((targetKalori * 0.15) / 4);
+        const targetLemakGram = Math.round((targetKalori * 0.25) / 9);
+
+        // 5. Ambil Input Makanan
+        const pKarbo = parseFloat(document.getElementById('inputKarbo').value) || 0;
+        const pSayur = parseFloat(document.getElementById('inputSayurBuah').value) || 0;
+        const pNabati = parseFloat(document.getElementById('inputNabati').value) || 0;
+        const pHewani = parseFloat(document.getElementById('inputHewani').value) || 0;
+        const pLemak = parseFloat(document.getElementById('inputLemak').value) || 0;
+        const pGula = parseFloat(document.getElementById('inputGula').value) || 0;
+
+        // 6. Hitung Total Asupan (Aktual)
+        let asupanKalori = 0, asupanKarbo = 0, asupanProt = 0, asupanLemak = 0;
+
+        // Helper function untuk sum total
+        function addNutrient(porsi, type) {
+            asupanKalori += porsi * FOOD_VALUES[type].kkal;
+            asupanKarbo += porsi * FOOD_VALUES[type].karbo;
+            asupanProt += porsi * FOOD_VALUES[type].prot;
+            asupanLemak += porsi * FOOD_VALUES[type].lemak;
+        }
+
+        addNutrient(pKarbo, 'karbo');
+        addNutrient(pSayur, 'sayurBuah');
+        addNutrient(pNabati, 'nabati');
+        addNutrient(pHewani, 'hewani');
+        addNutrient(pLemak, 'lemak');
+        addNutrient(pGula, 'gula');
+
+        // 7. Tampilkan Hasil
+        document.getElementById('resultSection').style.display = 'block';
+        document.getElementById('outNama').innerText = nama;
+        document.getElementById('outTargetKalori').innerText = targetKalori;
+        document.getElementById('outAsupanKalori').innerText = asupanKalori;
+
+        // Populate Table
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = `
+            <tr>
+                <td>Kalori (Energi)</td>
+                <td>${targetKalori} kkal</td>
+                <td>${asupanKalori} kkal</td>
+                <td>${getStatus(asupanKalori, targetKalori)}</td>
+            </tr>
+            <tr>
+                <td>Karbohidrat</td>
+                <td>${targetKarboGram} g</td>
+                <td>${asupanKarbo} g</td>
+                <td>${getStatus(asupanKarbo, targetKarboGram)}</td>
+            </tr>
+            <tr>
+                <td>Protein</td>
+                <td>${targetProtGram} g</td>
+                <td>${asupanProt} g</td>
+                <td>${getStatus(asupanProt, targetProtGram)}</td>
+            </tr>
+            <tr>
+                <td>Lemak</td>
+                <td>${targetLemakGram} g</td>
+                <td>${asupanLemak} g</td>
+                <td>${getStatus(asupanLemak, targetLemakGram)}</td>
+            </tr>
+        `;
+
+        // Buat Kesimpulan
+        const diff = asupanKalori - targetKalori;
+        let msg = "";
+        if (Math.abs(diff) < 200) {
+            msg = "Hebat! Asupan makan Anda sudah sesuai dengan kebutuhan harian tubuh. Pertahankan pola makan ini.";
+        } else if (diff > 0) {
+            msg = `Anda mengalami <strong>Surplus Kalori sebesar ${diff} kkal</strong>. Jika tujuan Anda bukan menaikkan berat badan, kurangi asupan gula atau minyak/gorengan.`;
+        } else {
+            msg = `Anda mengalami <strong>Defisit Kalori sebesar ${Math.abs(diff)} kkal</strong>. Jika Anda merasa lemas, tambahkan porsi karbohidrat kompleks atau lauk pauk.`;
+        }
+        document.getElementById('kesimpulanText').innerHTML = msg;
+        
+        // Scroll ke hasil
+        document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function getStatus(actual, target) {
+        const percentage = (actual / target) * 100;
+        if (percentage >= 90 && percentage <= 110) {
+            return '<span class="status-ideal">Ideal (Pas)</span>';
+        } else if (percentage < 90) {
+            return '<span class="status-deficit">Kurang</span>';
+        } else {
+            return '<span class="status-surplus">Berlebih</span>';
+        }
+    }
+</script>
+
+</body>
+</html>
